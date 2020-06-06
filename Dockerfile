@@ -2,6 +2,8 @@ FROM docker.io/library/python:3.8.3-alpine3.11
 
 MAINTAINER David Laganiere <my@email.org>
 
+ENV PYTHONUNBUFFERED 1
+
 RUN mkdir /app
 WORKDIR /app
 
