@@ -19,7 +19,11 @@ def index():
         response = Response('', status=200, mimetype='application/json')
 
         # TODO: Use the username from a DB call to put in here instead of a static user.
-        response.headers['X-Jenkins-User'] = 'davidlag'
+        response.headers['X-Jenkins-User'] = session.get('jenkins_user')
+
+        # TODO: For Kibana, check if the API key is close to expiration and
+        # request a new one as needed in the background and update cookie.
+        response.headers['X-Kibana-Auth'] = session.get('kibana_auth')
         return response
 
     else:
@@ -44,14 +48,23 @@ def login():
             session['logged_in'] = True
         
             # Move forward to validate session and request Elasticsearch API key.
+            #
             # TODO: Make the actual call to Elasticsearch API to get a new key.
+            #
+            # TODO: Don't forget to save the expiration time of the key to check it later
+            # and refresh the API key as needed.
+            #
             session['kibana_auth'] = 'd3VHN2dYSUI5eHhaR3Fmdk1tVUs6b3hnVUJCTDFRMWVoaDhDNS1uTGlIQQ=='
-            response.set_cookie('kibana_auth', 'd3VHN2dYSUI5eHhaR3Fmdk1tVUs6b3hnVUJCTDFRMWVoaDhDNS1uTGlIQQ==')
+
+            # TODO: Get credentials for all tools the user has access to to keep them in the
+            # session cookie for easier access.
+            session['jenkins_user'] = 'davidlag'
 
             return response
 
         else:
             # TODO: Better handling of this to give the user an error message.
+            # TODO: Log failed login attempts for security reasons.
             return 'Wrong password!'
     
     # Login page is shown when the user does not POST any credentials.
@@ -61,7 +74,6 @@ def login():
 def logout():
     session['logged_in'] = False
     response = make_response(redirect(url_for('login', _external=True)))
-    response.set_cookie('kibana_auth', expires=0)
     return response
 
 # TODO: Build this function to do the actual DB call.
