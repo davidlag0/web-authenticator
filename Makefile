@@ -4,7 +4,7 @@ IMAGE_NAME = web-auth
 CONTAINER_NAME = web-auth
 
 build:
-	podman build -t $(IMAGE_NAME) .
+	buildah build-using-dockerfile -t $(IMAGE_NAME) .
 
 #release:
 #	docker build \
