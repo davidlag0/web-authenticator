@@ -167,12 +167,15 @@ def authenticate(username, password):
     credentials.
     '''
 
-    # TODO: Safeguard credentials in env files.
-    connection = pg8000.connect('testuser', password='testpass', database='testdb')
-    print('here1')
+    # TODO: Verify user credentials against LDAP here.
 
-    # TODO: Don't use static credentials but make an actual call to a DB.
-    if username == 'blop' and password == 'blop':
+    # TODO: Safeguard credentials in env files.
+    # TODO: Deal with errors in case the database is down or not accessible, etc.
+    connection = pg8000.connect('testuser', password='testpass', database='testdb')
+
+    # Assume credentials were verified another way so only verify if the user
+    # exists in the database at this point.
+    if len(connection.run('SELECT * FROM users WHERE username=:user', user=username)) == 1:
         return True
     else:
         return False
