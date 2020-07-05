@@ -23,6 +23,10 @@ app.secret_key = b'_8#y4L"F4Q5z\m\bgh]/'
 
 HOME_PAGE = '/'
 
+# TODO: Safeguard credentials in env files.
+# TODO: Add error checking for the DB (DB down, unreachable, access denied, etc.)
+DB_CONNECTION = pg8000.connect('testuser', password='testpass', database='testdb')
+
 # To automatically log the user out after 120 minutes.
 #minutes=120
 app.permanent_session_lifetime = timedelta(seconds=15)
@@ -50,6 +54,9 @@ def index():
         response = Response('', status=200)
 
         response.headers['X-Jenkins-User'] = session.get('jenkins_user')
+
+        if not session.get('jenkins_user'):
+            app.logger.info('User %s does not have access to Jenkins', session.get('username'))
 
         # TODO: For Kibana, check if the API key is close to expiration and
         # request a new one as needed in the background and update cookie.
@@ -90,6 +97,9 @@ def index():
 
 @app.route('/login', methods=['GET', 'POST'])
 def login():
+    # TODO: Improve user workflow when a user does not have access to
+    # a tool to give him/her a meaningful error message about it.
+
     # If we get a URI to redirect to then redirect to the login page and
     # save that URI to use it.
     url = get_redirect_url(request)
@@ -108,6 +118,14 @@ def login():
             app.logger.info('User %s logged in successfully',
                 session.get('username'))
         
+            # Get credentials for all the tools the user has access to so
+            # they are kept in the session cookie for easier access and less
+            # database queries.
+            # TODO: Possible error checking to do here in case the DB returns nothing.
+            db_tools_access_results = DB_CONNECTION.run('SELECT tools.short_name FROM users INNER JOIN user_access ON users.user_id = user_access.user_id INNER JOIN tools ON tools.tool_id = user_access.tool_id WHERE users.username=:user', user=session['username'])
+            tools_access = [tool[0] for tool in db_tools_access_results]
+
+            # Kibana.
             # Move forward to validate session and request Elasticsearch API key.
             #
             # TODO: Make the actual call to Elasticsearch API to get a new key.
@@ -117,10 +135,11 @@ def login():
             #
             session['kibana_auth'] = 'd3VHN2dYSUI5eHhaR3Fmdk1tVUs6b3hnVUJCTDFRMWVoaDhDNS1uTGlIQQ=='
 
-            # TODO: Get credentials for all tools the user has access to to keep them in the
-            # session cookie for easier access.
-            # TODO: Use the username from a DB call to put in here instead of a static user.
-            session['jenkins_user'] = 'davidlag'
+            # Jenkins.
+            if 'jenkins' in tools_access:
+                session['jenkins_user'] = session['username']
+            else:
+                session['jenkins_user'] = ''
 
             return response
 
@@ -169,13 +188,9 @@ def authenticate(username, password):
 
     # TODO: Verify user credentials against LDAP here.
 
-    # TODO: Safeguard credentials in env files.
-    # TODO: Deal with errors in case the database is down or not accessible, etc.
-    connection = pg8000.connect('testuser', password='testpass', database='testdb')
-
     # Assume credentials were verified another way so only verify if the user
     # exists in the database at this point.
-    if len(connection.run('SELECT * FROM users WHERE username=:user', user=username)) == 1:
+    if len(DB_CONNECTION.run('SELECT * FROM users WHERE username=:user', user=username)) == 1:
         return True
     else:
         return False
