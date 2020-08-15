@@ -12,24 +12,57 @@
 import os
 import json
 from pprint import pprint
-from datetime import timedelta
+from datetime import timedelta, datetime
 from flask import Flask, abort, request, make_response, Response
 from flask import render_template, redirect, url_for, session, jsonify
 import pg8000
+from elasticsearch import Elasticsearch
 
 app = Flask(__name__)
 
 app.secret_key = b'_8#y4L"F4Q5z\m\bgh]/'
 
 HOME_PAGE = '/'
+ES_SESSION_ABOUT_TO_EXPIRE = 1
+
+# Session expiration in minutes.
+SESSION_EXPIRATION = 120
+ES_SESSION_EXPIRATION = 15
 
 # TODO: Safeguard credentials in env files.
 # TODO: Add error checking for the DB (DB down, unreachable, access denied, etc.)
 DB_CONNECTION = pg8000.connect('testuser', password='testpass', database='testdb')
+# TODO: Add error checking if ELK cluster is down, unreachable, API key expired, etc.
+ELASTICSEARCH = Elasticsearch(
+                   ['https://elastic:changeme@localhost:9200/'],
+                   verify_certs=False
+               )
 
-# To automatically log the user out after 120 minutes.
-#minutes=120
-app.permanent_session_lifetime = timedelta(seconds=15)
+API_KEY_REQUEST_BODY = {
+    'name': 'davidlag',
+    'expiration': str(ES_SESSION_EXPIRATION) + 'm',
+    'role_descriptors': {
+        'role': {
+            'cluster': ['all'],
+            'index': [
+                {
+                    'names': ['*'],
+                    'privileges': ['all']
+                }
+            ],
+            'applications': [
+                {
+                    'application': 'kibana-.kibana',
+                    'privileges': ['all'],
+                    'resources': ['*']
+                }
+            ]
+        }
+    }
+}
+
+# To automatically log the user out after SESSION_EXPIRATION.
+app.permanent_session_lifetime = timedelta(minutes=SESSION_EXPIRATION)
 
 @app.before_request
 def renew_user_session():
@@ -54,9 +87,6 @@ def index():
         response = Response('', status=200)
 
         response.headers['X-Jenkins-User'] = session.get('jenkins_user')
-
-        if not session.get('jenkins_user'):
-            app.logger.info('User %s does not have access to Jenkins', session.get('username'))
 
         # TODO: For Kibana, check if the API key is close to expiration and
         # request a new one as needed in the background and update cookie.
@@ -133,6 +163,24 @@ def login():
             # TODO: Don't forget to save the expiration time of the key to check it later
             # and refresh the API key as needed.
             #
+
+            # Verify if the user already has a valid API key and if so, use it.
+            es_user_api_keys = ELASTICSEARCH.security.get_api_key(
+                                    params={'name': session['username']})
+            
+            for key in es_user_api_keys.get('api_keys'):
+                if key.get('invalidated') == False and \
+                    (int(key.get('expiration')) - int(datetime.now().timestamp() * 1000)) \
+                        > int(timedelta(minutes=ES_SESSION_ABOUT_TO_EXPIRE).total_seconds() * 1000):
+
+                    session['kibana_auth'] = key.get('id') + ':' + key.get('')
+                
+
+            #print('es:', ELASTICSEARCH.security.create_api_key(body=API_KEY_REQUEST_BODY))
+            #print('get es:', ELASTICSEARCH.security.get_api_key(
+            #                    params={ 'name': session['username'] }
+            #                    ))
+
             session['kibana_auth'] = 'd3VHN2dYSUI5eHhaR3Fmdk1tVUs6b3hnVUJCTDFRMWVoaDhDNS1uTGlIQQ=='
 
             # Jenkins.
