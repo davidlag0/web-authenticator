@@ -13,7 +13,8 @@ build:
 
 run:
 	podman run --rm --expose 5000 --name $(CONTAINER_NAME) \
-	--pod pod -v $(PWD)/app:/app:Z,ro $(IMAGE_NAME)
+	--pod pod -v $(PWD):/app:Z $(IMAGE_NAME) \
+	--host 0.0.0.0 --port 6000
 
 inspect:
 	podman inspect $(CONTAINER_NAME)
@@ -23,6 +24,12 @@ shell:
 
 stop:
 	podman stop $(CONTAINER_NAME)
+
+test:
+	podman exec -it $(CONTAINER_NAME) coverage run -m pytest
+
+coverage:
+	podman exec -it $(CONTAINER_NAME) coverage report
 
 #clean:
 #	docker ps -a | grep '$(CONTAINER_NAME)' | awk '{print $$1}' | xargs docker rm \
