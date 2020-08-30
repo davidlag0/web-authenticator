@@ -1,6 +1,7 @@
 from flask import Flask
 from datetime import timedelta
 import os
+from werkzeug.middleware.proxy_fix import ProxyFix
 from app.auth.helper import SESSION_EXPIRATION
 from app.auth import auth_blueprint
 
@@ -10,6 +11,7 @@ def create_app(config_filename=None):
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_pyfile(config_filename)
     app.permanent_session_lifetime = timedelta(minutes=SESSION_EXPIRATION)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1 ,x_proto=1)
     register_blueprints(app)
 
     # TODO: Investigate further how to use this.
