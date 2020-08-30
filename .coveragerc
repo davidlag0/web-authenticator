@@ -1,8 +1,9 @@
 [run]
-branch=True
-source =
-    estimator
-    database
+branch = True
+source = app
 
 [report]
-show_missing=True
+show_missing = True
+
+[html]
+directory = htmlcov

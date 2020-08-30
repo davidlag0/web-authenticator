@@ -1,12 +1,12 @@
 import pytest
 import os
 
-@pytest.fixture
-def app():
-    port = int(os.environ.get('PORT', 6001))
-    app.run(host='0.0.0.0', port=port, debug=True)
-    return app
-
-def test_basic(client):
-    response = client.get('/')
+def test_home_page(test_client):
+    """
+    GIVEN a Flask application
+    WHEN the '/' page is requested (GET)
+    THEN check the response is valid
+    """
+    response = test_client.get('/',
+                    environ_base={'HTTP_X_ORIGINAL_URI': 'http://1.1.1.1:8080/kibana'})
     assert response.status_code == 200
