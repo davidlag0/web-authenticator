@@ -1,13 +1,15 @@
+'''pytest Configuration for tests'''
 import pytest
 from app import create_app
 
 
 @pytest.fixture(scope='module')
 def test_client():
+    '''Test Client'''
     flask_app = create_app('flask_test.cfg')
 
-    # Flask provides a way to test your application by exposing the Werkzeug test Client
-    # and handling the context locals for you.
+    # Flask provides a way to test your application by exposing the Werkzeug
+    # test Client and handling the context locals for you.
     testing_client = flask_app.test_client()
 
     # Establish an application context before running the tests.
@@ -18,6 +20,7 @@ def test_client():
 
     ctx.pop()
 
+
 # TODO: Could be useful later.
 """
 @pytest.fixture(scope='module')
@@ -26,8 +29,10 @@ def init_database():
     db.create_all()
 
     # Insert user data
-    user1 = User(email='patkennedy79@gmail.com', plaintext_password='FlaskIsAwesome')
-    user2 = User(email='kennedyfamilyrecipes@gmail.com', plaintext_password='PaSsWoRd')
+    user1 = User(email='patkennedy79@gmail.com',
+                 plaintext_password='FlaskIsAwesome')
+    user2 = User(email='kennedyfamilyrecipes@gmail.com',
+                plaintext_password='PaSsWoRd')
     db.session.add(user1)
     db.session.add(user2)
 
