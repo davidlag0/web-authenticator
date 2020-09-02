@@ -1,6 +1,7 @@
-from flask import Flask
-from datetime import timedelta
+'''web-authenticator App Inits'''
 import os
+from datetime import timedelta
+from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from app.auth.helper import SESSION_EXPIRATION
 from app.auth import auth_blueprint
@@ -8,10 +9,11 @@ from app.auth import auth_blueprint
 
 # Application Factory.
 def create_app(config_filename=None):
+    '''Create Flask App'''
     app = Flask(__name__, instance_relative_config=True)
     app.config.from_pyfile(config_filename)
     app.permanent_session_lifetime = timedelta(minutes=SESSION_EXPIRATION)
-    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1 ,x_proto=1)
+    app.wsgi_app = ProxyFix(app.wsgi_app, x_for=1, x_proto=1)
     register_blueprints(app)
 
     # TODO: Investigate further how to use this.
@@ -35,6 +37,7 @@ def create_app(config_filename=None):
     return app
 
 def register_blueprints(app):
+    '''Register App Blueprints'''
     # Register each Blueprint with the Flask application
     # instance (app)
     app.register_blueprint(auth_blueprint)

@@ -1,4 +1,5 @@
-from flask import request, session
+'''App Helpers'''
+from flask import session
 import pg8000
 from elasticsearch import Elasticsearch
 from . import auth_blueprint
@@ -16,9 +17,9 @@ ES_SESSION_EXPIRATION = 15
 DB_CONNECTION = pg8000.connect('testuser', password='testpass', database='testdb')
 # TODO: Add error checking if ELK cluster is down, unreachable, API key expired, etc.
 ELASTICSEARCH = Elasticsearch(
-                   ['https://elastic:changeme@localhost:9200/'],
-                   verify_certs=False
-               )
+    ['https://elastic:changeme@localhost:9200/'],
+    verify_certs=False
+)
 
 API_KEY_REQUEST_BODY = {
     'name': 'davidlag',
@@ -46,6 +47,7 @@ API_KEY_REQUEST_BODY = {
 
 @auth_blueprint.before_request
 def renew_user_session():
+    '''Force a renewal of the user session'''
     session.modified = True
 
 
@@ -66,6 +68,10 @@ def authenticate(username, password):
         return False
 
 def get_redirect_url(request):
+    '''
+    Return URL to redirect to based on URL query parameters used for redirection
+    by various applications.
+    '''
     # Web Authenticator.
     if request.args.get('url'):
         return request.args.get('url')

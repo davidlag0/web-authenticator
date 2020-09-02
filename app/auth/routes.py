@@ -1,4 +1,4 @@
-# Web Authenticator
+'''Web Authenticator'''
 #
 # The code is based with a mindset of Single-Sign-On (SSO) so when a user
 # logs in, all their tools credentials are pulled and they can use any
@@ -13,14 +13,15 @@ from datetime import timedelta, datetime
 from flask import session, request, Response, make_response
 from flask import redirect, render_template
 from flask import current_app as app
-from . import auth_blueprint
 from app.auth.helper import DB_CONNECTION, authenticate, get_redirect_url
 from app.auth.helper import ELASTICSEARCH, ES_SESSION_ABOUT_TO_EXPIRE
 from app.auth.helper import HOME_PAGE
+from . import auth_blueprint
 
 
 @auth_blueprint.route('/')
 def index():
+    '''Route for root URI'''
     #response = Response('', 401, {'WWW-Authenticate':'Basic realm="Login Required"'})
     #response.headers['X-Original-URI'] = request.headers.get('X-Original-URI')
     #response = Response('', status=200)
@@ -52,25 +53,29 @@ def index():
         # We need to return 200 OK with bad credentials. This forces a service
         # to request auth and we can then catch this behavior through NGINX and
         # redirect to our own login page.
-        
+
         # Kibana and Jenkins.
         # We simply send a 200 OK with no authentication information and we let
         # these tools handle part of the redirection.
         response = Response('', status=200)
         response.headers['X-Kibana-Auth'] = ''
         response.headers['X-Jenkins-User'] = ''
-        
+
         # Jupyter Notebook.
         #print('cookies:', request.cookies)
-        #print('cookie name:', 'username-' + request.headers['Host'].replace('.', '-').replace(':', '-'))
+        #print('cookie name:',
+        #      'username-' + request.headers['Host'].replace('.', '-').replace(':', '-'))
         #print('host:', request.headers['Host'])
-        jupyter_notebook_cookie = 'username-' + request.headers['Host'].replace('.', '-').replace(':', '-')
+        jupyter_notebook_cookie = 'username-' + \
+            request.headers['Host'].replace('.', '-').replace(':', '-')
         response.set_cookie(jupyter_notebook_cookie, '', expires=0, path='/jupyter/')
         response.headers['X-Jupyter-Token'] = 'badtoken'
 
         # Keep for now in case this is useful later.
         #if request.headers.get('Content-Type') == 'application/json':
-        #    #response = Response(json.dumps({'statusCode': 401}), status=401, mimetype='application/json')
+        #    #response = Response(json.dumps({'statusCode': 401}),
+        #                         status=401,
+        #                         mimetype='application/json')
         #    response = make_response(jsonify({'code': 401, 'message': 'Login required.'}), 401)
         #    return response
 
@@ -78,6 +83,7 @@ def index():
 
 @auth_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
+    '''Route for /login URI'''
     # TODO: Improve user workflow when a user does not have access to
     # a tool to give him/her a meaningful error message about it.
 
@@ -97,8 +103,8 @@ def login():
             session.permanent = True
 
             app.logger.info('User %s logged in successfully',
-                session.get('username'))
-        
+                            session.get('username'))
+
             # Get credentials for all the tools the user has access to so
             # they are kept in the session cookie for easier access and less
             # database queries.
@@ -117,15 +123,15 @@ def login():
 
             # Verify if the user already has a valid API key and if so, use it.
             es_user_api_keys = ELASTICSEARCH.security.get_api_key(
-                                    params={'name': session['username']})
-            
+                params={'name': session['username']})
+
             for key in es_user_api_keys.get('api_keys'):
-                if key.get('invalidated') == False and \
+                if not key.get('invalidated') and \
                     (int(key.get('expiration')) - int(datetime.now().timestamp() * 1000)) \
                         > int(timedelta(minutes=ES_SESSION_ABOUT_TO_EXPIRE).total_seconds() * 1000):
 
                     session['kibana_auth'] = key.get('id') + ':' + key.get('')
-                
+
 
             #print('es:', ELASTICSEARCH.security.create_api_key(body=API_KEY_REQUEST_BODY))
             #print('get es:', ELASTICSEARCH.security.get_api_key(
@@ -144,11 +150,11 @@ def login():
 
         else:
             app.logger.warning('User %s failed to log in',
-                request.form['username'])
+                               request.form['username'])
 
             # TODO: Better handling of this to give the user an error message.
             return 'Wrong password!'
-    
+
     if not url:
         # To manage the case where a user tries to logout of Kibana only.
         # As NGINX would be setup to redirect to the login page with the query
@@ -164,10 +170,11 @@ def login():
 
 @auth_blueprint.route('/logout', methods=['GET'])
 def logout():
+    '''Route for /logout URI'''
     session['logged_in'] = False
 
     app.logger.info('User %s logged out successfully',
-        session.get('username'))
+                    session.get('username'))
 
     # Keep as reference for now.
     #if request.args.get('next'):
