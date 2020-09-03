@@ -121,6 +121,7 @@ def login():
             # database queries.
             # TODO: Possible error checking to do here in case the DB returns nothing.
             db_tools_access_results = DB_CONNECTION.run(
+                # pylint: disable=line-too-long
                 'SELECT tools.short_name FROM users INNER JOIN user_access ON users.user_id = user_access.user_id INNER JOIN tools ON tools.tool_id = user_access.tool_id WHERE users.username=:user', user=session['username'])
             tools_access = [tool[0] for tool in db_tools_access_results]
 

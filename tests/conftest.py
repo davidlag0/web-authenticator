@@ -1,5 +1,6 @@
 '''pytest Configuration for tests'''
 import pytest
+# pylint: disable=import-error
 from app import create_app
 
 
@@ -22,21 +23,26 @@ def test_client():
 
 
 class AuthActions(object):
+    '''AuthActions'''
     def __init__(self, client):
         self._client = client
 
     def login(self, username='davidlag', password='blop'):
+        '''Log the user in'''
         return self._client.post(
             '/login',
             data={'username': username, 'password': password}
         )
 
     def logout(self):
+        '''Log the user out'''
         return self._client.get('/logout')
 
 
 @pytest.fixture
+# pylint: disable=redefined-outer-name
 def auth(test_client):
+    '''Authenticate test user'''
     return AuthActions(test_client)
 
 

@@ -44,6 +44,7 @@ API_KEY_REQUEST_BODY = {
 
 
 # TODO: Build this function to do the actual DB call.
+# pylint: disable=unused-argument
 def authenticate(username, password):
     '''
     Authenticate the user against the local DB using the provided
