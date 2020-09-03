@@ -4,7 +4,7 @@ from datetime import timedelta
 from flask import Flask
 from werkzeug.middleware.proxy_fix import ProxyFix
 from app.auth.helper import SESSION_EXPIRATION
-from app.auth import auth_blueprint
+from app.auth.routes import routes_blueprint
 
 
 # Application Factory.
@@ -40,4 +40,4 @@ def register_blueprints(app):
     '''Register App Blueprints'''
     # Register each Blueprint with the Flask application
     # instance (app)
-    app.register_blueprint(auth_blueprint)
+    app.register_blueprint(routes_blueprint)

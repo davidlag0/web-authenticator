@@ -1,4 +1,4 @@
-'''Web Authenticator'''
+'''Web Authenticator Routes'''
 #
 # The code is based with a mindset of Single-Sign-On (SSO) so when a user
 # logs in, all their tools credentials are pulled and they can use any
@@ -11,22 +11,32 @@
 
 from datetime import timedelta, datetime
 from flask import session, request, Response, make_response
-from flask import redirect, render_template
+from flask import redirect, render_template, Blueprint
 from flask import current_app as app
 from app.auth.helper import DB_CONNECTION, authenticate, get_redirect_url
 from app.auth.helper import ELASTICSEARCH, ES_SESSION_ABOUT_TO_EXPIRE
 from app.auth.helper import HOME_PAGE
-from . import auth_blueprint
+
+routes_blueprint = Blueprint('auth', __name__)
 
 
-@auth_blueprint.route('/')
+@routes_blueprint.before_request
+def renew_user_session():
+    '''Force a renewal of the user session'''
+    session.modified = True
+
+
+@routes_blueprint.route('/')
 def index():
     '''Route for root URI'''
     #response = Response('', 401, {'WWW-Authenticate':'Basic realm="Login Required"'})
     #response.headers['X-Original-URI'] = request.headers.get('X-Original-URI')
     #response = Response('', status=200)
-    app.logger.info('Authentication request from user: %s for URI %s',
-                    session.get('username'), request.headers['X-Original-URI'])
+    if 'X-Original-URI' in request.headers:
+        app.logger.info('Authentication request from user: %s for URI %s',
+                        session.get('username'), request.headers['X-Original-URI'])
+    else:
+        app.logger.error('Missing header from NGINX: X-Original-URI')
 
     # As this is the entrypoint of web-auth, save the original URI to use
     # it later to redirect the browser after the auth has passed. Only set
@@ -63,7 +73,7 @@ def index():
 
         # Jupyter Notebook.
         #print('cookies:', request.cookies)
-        #print('cookie name:',
+        # print('cookie name:',
         #      'username-' + request.headers['Host'].replace('.', '-').replace(':', '-'))
         #print('host:', request.headers['Host'])
         jupyter_notebook_cookie = 'username-' + \
@@ -72,8 +82,8 @@ def index():
         response.headers['X-Jupyter-Token'] = 'badtoken'
 
         # Keep for now in case this is useful later.
-        #if request.headers.get('Content-Type') == 'application/json':
-        #    #response = Response(json.dumps({'statusCode': 401}),
+        # if request.headers.get('Content-Type') == 'application/json':
+        #    response = Response(json.dumps({'statusCode': 401}),
         #                         status=401,
         #                         mimetype='application/json')
         #    response = make_response(jsonify({'code': 401, 'message': 'Login required.'}), 401)
@@ -81,7 +91,8 @@ def index():
 
         return response
 
-@auth_blueprint.route('/login', methods=['GET', 'POST'])
+
+@routes_blueprint.route('/login', methods=['GET', 'POST'])
 def login():
     '''Route for /login URI'''
     # TODO: Improve user workflow when a user does not have access to
@@ -109,7 +120,8 @@ def login():
             # they are kept in the session cookie for easier access and less
             # database queries.
             # TODO: Possible error checking to do here in case the DB returns nothing.
-            db_tools_access_results = DB_CONNECTION.run('SELECT tools.short_name FROM users INNER JOIN user_access ON users.user_id = user_access.user_id INNER JOIN tools ON tools.tool_id = user_access.tool_id WHERE users.username=:user', user=session['username'])
+            db_tools_access_results = DB_CONNECTION.run(
+                'SELECT tools.short_name FROM users INNER JOIN user_access ON users.user_id = user_access.user_id INNER JOIN tools ON tools.tool_id = user_access.tool_id WHERE users.username=:user', user=session['username'])
             tools_access = [tool[0] for tool in db_tools_access_results]
 
             # Kibana.
@@ -132,9 +144,8 @@ def login():
 
                     session['kibana_auth'] = key.get('id') + ':' + key.get('')
 
-
             #print('es:', ELASTICSEARCH.security.create_api_key(body=API_KEY_REQUEST_BODY))
-            #print('get es:', ELASTICSEARCH.security.get_api_key(
+            # print('get es:', ELASTICSEARCH.security.get_api_key(
             #                    params={ 'name': session['username'] }
             #                    ))
 
@@ -168,7 +179,8 @@ def login():
     # Login page is shown when the user does not POST any credentials.
     return render_template('login.html', url=url)
 
-@auth_blueprint.route('/logout', methods=['GET'])
+
+@routes_blueprint.route('/logout', methods=['GET'])
 def logout():
     '''Route for /logout URI'''
     session['logged_in'] = False
@@ -177,7 +189,7 @@ def logout():
                     session.get('username'))
 
     # Keep as reference for now.
-    #if request.args.get('next'):
+    # if request.args.get('next'):
     #    response = make_response(redirect(url_for('login', _external=True)))
     #    return response
 

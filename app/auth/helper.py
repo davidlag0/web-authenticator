@@ -1,8 +1,6 @@
 '''App Helpers'''
-from flask import session
 import pg8000
 from elasticsearch import Elasticsearch
-from . import auth_blueprint
 
 
 HOME_PAGE = '/'
@@ -45,12 +43,6 @@ API_KEY_REQUEST_BODY = {
 }
 
 
-@auth_blueprint.before_request
-def renew_user_session():
-    '''Force a renewal of the user session'''
-    session.modified = True
-
-
 # TODO: Build this function to do the actual DB call.
 def authenticate(username, password):
     '''
@@ -67,6 +59,7 @@ def authenticate(username, password):
     else:
         return False
 
+
 def get_redirect_url(request):
     '''
     Return URL to redirect to based on URL query parameters used for redirection
@@ -81,3 +74,5 @@ def get_redirect_url(request):
     # Jenkins.
     elif request.args.get('from'):
         return request.args.get('from')
+    else:
+        return ''
