@@ -21,6 +21,25 @@ def test_client():
     ctx.pop()
 
 
+class AuthActions(object):
+    def __init__(self, client):
+        self._client = client
+
+    def login(self, username='davidlag', password='blop'):
+        return self._client.post(
+            '/login',
+            data={'username': username, 'password': password}
+        )
+
+    def logout(self):
+        return self._client.get('/logout')
+
+
+@pytest.fixture
+def auth(test_client):
+    return AuthActions(test_client)
+
+
 # TODO: Could be useful later.
 """
 @pytest.fixture(scope='module')
