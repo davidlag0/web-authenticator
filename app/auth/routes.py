@@ -9,12 +9,12 @@
 # still logged in.
 #
 
-from datetime import timedelta, datetime
+# from datetime import timedelta, datetime
 from flask import session, request, Response, make_response
 from flask import redirect, render_template, Blueprint
 from flask import current_app as app
 from app.auth.helper import DB_CONNECTION, authenticate, get_redirect_url
-from app.auth.helper import ELASTICSEARCH, ES_SESSION_ABOUT_TO_EXPIRE
+# from app.auth.helper import ELASTICSEARCH, ES_SESSION_ABOUT_TO_EXPIRE
 from app.auth.helper import HOME_PAGE
 
 routes_blueprint = Blueprint('auth', __name__)
@@ -134,16 +134,18 @@ def login():
             # and refresh the API key as needed.
             #
 
-            # Verify if the user already has a valid API key and if so, use it.
-            es_user_api_keys = ELASTICSEARCH.security.get_api_key(
-                params={'name': session['username']})
+            # TODO: Commented this for now. Need to find a stratey that works.
+            # # Verify if the user already has a valid API key and if so, use it.
+            # es_user_api_keys = ELASTICSEARCH.security.get_api_key(
+            #     params={'name': session['username']})
 
-            for key in es_user_api_keys.get('api_keys'):
-                if not key.get('invalidated') and \
-                    (int(key.get('expiration')) - int(datetime.now().timestamp() * 1000)) \
-                        > int(timedelta(minutes=ES_SESSION_ABOUT_TO_EXPIRE).total_seconds() * 1000):
+            # for key in es_user_api_keys.get('api_keys'):
+            #     if not key.get('invalidated') and \
+            #         (int(key.get('expiration')) - int(datetime.now().timestamp() * 1000)) \
+            # pylint: disable=line-too-long
+            #             > int(timedelta(minutes=ES_SESSION_ABOUT_TO_EXPIRE).total_seconds() * 1000):
 
-                    session['kibana_auth'] = key.get('id') + ':' + key.get('')
+            #         session['kibana_auth'] = key.get('id') + ':' + key.get('')
 
             #print('es:', ELASTICSEARCH.security.create_api_key(body=API_KEY_REQUEST_BODY))
             # print('get es:', ELASTICSEARCH.security.get_api_key(
