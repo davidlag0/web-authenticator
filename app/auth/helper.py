@@ -55,7 +55,7 @@ def authenticate(username, password):
 
     # Assume credentials were verified another way so only verify if the user
     # exists in the database at this point.
-    if len(DB_CONNECTION.run('SELECT * FROM users WHERE username=:user', user=username)) == 1:
+    if len(DB_CONNECTION.run('SELECT * FROM users WHERE username=:user', user=username)) == int(1):
         return True
     else:
         return False
