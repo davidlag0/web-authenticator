@@ -24,10 +24,18 @@ def test_client():
 
 class AuthActions(object):
     '''AuthActions'''
+
     def __init__(self, client):
         self._client = client
 
-    def login(self, username='davidlag', password='blop'):
+    def login_allaccess(self, username='testuser_allaccess', password='testpass'):
+        '''Log the user in'''
+        return self._client.post(
+            '/login',
+            data={'username': username, 'password': password}
+        )
+
+    def login_noaccess(self, username='testuser_noaccess', password='testpass'):
         '''Log the user in'''
         return self._client.post(
             '/login',
