@@ -10,7 +10,7 @@ def test_home_page_without_active_session(test_client):
     '''
     response = test_client.get(
         '/',
-        environ_base={'HTTP_X_ORIGINAL_URI': 'http://1.1.1.1:8080/kibana'})
+        environ_base={'HTTP_X_ORIGINAL_URI': 'http://localhost/test_url'})
     assert response.status_code == 200
     assert response.headers['X-Kibana-Auth'] == ''
     assert response.headers['X-Jenkins-User'] == ''
