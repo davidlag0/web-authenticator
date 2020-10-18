@@ -7,6 +7,8 @@ verify_ssl = true
 bandit = "*"
 pylint = "*"
 pylint-django = "*"
+pytest-cov = "*"
+pytest-django = "*"
 
 [packages]
 django = "*"
@@ -14,6 +16,10 @@ python-decouple = "*"
 gunicorn = "*"
 django-nose = "*"
 coverage = "*"
+django-redis = "*"
+redis = "*"
+dj-database-url = "*"
+django-cache-url = "*"
 
 [requires]
 python_version = "3.8"
