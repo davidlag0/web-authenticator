@@ -20,14 +20,12 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.1/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = 'un51^12nj!o7o@amzeu369xyt#_cl8vrh_w(@@u&3zv@hd1-91'
+SECRET_KEY = config('SECRET_KEY')
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['www.home.arpa']
-
+ALLOWED_HOSTS = config('ALLOWED_HOSTS', '', cast=Csv())
 
 # Application definition
 
