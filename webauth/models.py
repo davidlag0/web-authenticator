@@ -6,10 +6,6 @@ class User(models.Model):
     username = models.CharField(max_length=100, unique=True, blank=False, null=False)
     email = models.EmailField(unique=True, blank=False, null=False)
 
-    def save(self, *args, **kwargs):
-        super().full_clean()
-        super().save(*args, **kwargs)
-
     def __str__(self):
         return str(self.username)
 
