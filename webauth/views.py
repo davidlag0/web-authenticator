@@ -3,6 +3,7 @@ import logging
 from django.http import HttpResponse, HttpResponseRedirect
 from django.views.decorators.http import require_http_methods
 from django.shortcuts import render
+from django.http import Http404
 from webauth.models import User, UserAccess
 
 logger = logging.getLogger(__name__)
@@ -39,7 +40,7 @@ def authenticate(username, password):
     if User.objects.get(username=username):
         return True
 
-def index(request):
+def index(request, tool=''):
     '''Route for root URI'''
     if 'X-Original-URI' in request.headers:
         logger.info('Authentication request from user: %s for URI %s',
@@ -47,12 +48,16 @@ def index(request):
     else:
         logger.error('Missing header from NGINX: X-Original-URI')
 
-    if 'X-Tool' in request.headers:
-        logger.info('tool:%s', request.headers['X-Tool'])
+    logger.info('tool received (index):%s', tool)
 
     # As this is the entrypoint of web-auth, save the original URI to use
     # it later to redirect the browser after the auth has passed. Only set
     # it if empty to avoid overwriting it with subsequent calls to this function.
+    if tool == 'kibana' or tool == 'jenkins' or tool == 'jupyter':
+        pass
+    else:
+        raise Http404()
+
     if request.session.get('logged_in'):
 
         response = HttpResponse()
@@ -108,7 +113,7 @@ def login(request, tool=''):
     # TODO: Improve user workflow when a user does not have access to
     # a tool to give him/her a meaningful error message about it.
 
-    logger.info('tool received:%s', tool)
+    logger.info('tool received (login):%s', tool)
 
     # If we get a URI to redirect to then redirect to the login page and
     # save that URI to use it.
@@ -194,7 +199,8 @@ def login(request, tool=''):
         return response
 
     # Login page is shown when the user does not POST any credentials.
-    context = {'url': url}
+    logger.info('url in form:%s', url)
+    context = {'url': url, 'tool': tool}
     return render(request, 'webauth/index.html', context)
 
 @require_http_methods(['GET'])
