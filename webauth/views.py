@@ -53,14 +53,14 @@ def index(request, tool=''):
     # As this is the entrypoint of web-auth, save the original URI to use
     # it later to redirect the browser after the auth has passed. Only set
     # it if empty to avoid overwriting it with subsequent calls to this function.
-    if tool == 'kibana' or tool == 'jenkins' or tool == 'jupyter':
+    if tool in ('kibana', 'jenkins', 'jupyter'):
         pass
     else:
         raise Http404()
 
-    if request.session.get('logged_in'):
+    response = HttpResponse()
 
-        response = HttpResponse()
+    if request.session.get('logged_in'):
 
         # TODO: To fix when the bottom code block will be uncommented.
         # response['X-Jenkins-User'] = request.session['jenkins_user']
@@ -72,8 +72,6 @@ def index(request, tool=''):
         # Get the global/shared token from a DB so that it can be changed easily.
         response['X-Jupyter-Token'] = 'blopblop'
 
-        return response
-
     else:
         # We need to return 200 OK with bad credentials. This forces a service
         # to request auth and we can then catch this behavior through NGINX and
@@ -82,7 +80,6 @@ def index(request, tool=''):
         # Kibana and Jenkins.
         # We simply send a 200 OK with no authentication information and we let
         # these tools handle part of the redirection.
-        response = HttpResponse()
         response['X-Kibana-Auth'] = ''
         response['X-Jenkins-User'] = ''
 
@@ -105,7 +102,7 @@ def index(request, tool=''):
         #    response = make_response(jsonify({'code': 401, 'message': 'Login required.'}), 401)
         #    return response
 
-        return response
+    return response
 
 @require_http_methods(['GET', 'POST'])
 def login(request, tool=''):
