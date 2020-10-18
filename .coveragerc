@@ -1,9 +1,16 @@
 [run]
 branch = True
-source = app
+source = .
 
 [report]
+fail_under = 100
 show_missing = True
+skip_covered = True
+omit =
+  ./manage.py
+  ./*/migrations/*
+  ./webtools/asgi.py
+  ./webtools/wsgi.py
 
 [html]
 directory = htmlcov
