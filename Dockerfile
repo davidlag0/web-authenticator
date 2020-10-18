@@ -1,24 +1,21 @@
-FROM docker.io/library/python:3.8.3-alpine3.11
+FROM docker.io/library/python:3.8.6-alpine3.12
 
 LABEL author="David Laganiere <my@email.org>"
 
-ENV PYTHONUNBUFFERED 1
-
-# To be able to run flask simply with 'flask run'.
-ENV FLASK_APP "main.py"
-
-RUN mkdir /app
+# Create app directory
+RUN mkdir -p /app
 WORKDIR /app
 
-# Required to build the image before it is volume
-# mounted.
-COPY requirements.txt /app
+ENV PYTHONDONTWRITEBYTECODE 1
+ENV PYTHONUNBUFFERED 1
 
-RUN python -m pip install --upgrade pip && \
-    pip install --no-cache-dir -r requirements.txt
+# Install dependencies
+COPY Pipfile Pipfile.lock manage.py webauth/ webtools/ /app/
 
-EXPOSE 5000
+RUN apk update && apk upgrade \
+    && pip install --upgrade pip \
+    && pip install pipenv \
+    && pipenv install --system --deploy --ignore-pipfile
 
-# Allows us to use other command-line arguments
-# as needed when the container image is run.
-ENTRYPOINT [ "flask", "run" ]
+# Expose port
+EXPOSE 6000
