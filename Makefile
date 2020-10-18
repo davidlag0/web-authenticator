@@ -1,4 +1,5 @@
-.PHONY: clean build run stop inspect
+.PHONY: clean build dev stop inspect
+.DEFAULT_GOAL := build
 
 IMAGE_NAME = web-auth
 CONTAINER_NAME = web-auth
@@ -11,10 +12,10 @@ build:
 #		--build-arg VCS_REF=`git rev-parse --short HEAD` \
 #		--build-arg BUILD_DATE=`date -u +"%Y-%m-%dT%H:%M:%SZ"` -t $(IMAGE_NAME) .
 
-run:
-	podman run --rm --expose 5000 --name $(CONTAINER_NAME) \
+dev:
+	podman run --rm --expose 6000 --name $(CONTAINER_NAME) \
 	--pod pod -v $(PWD):/app:Z $(IMAGE_NAME) \
-	--host 0.0.0.0 --port 6000
+	python manage.py runserver 0:6000
 
 inspect:
 	podman inspect $(CONTAINER_NAME)
