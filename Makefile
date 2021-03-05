@@ -14,8 +14,8 @@ build:
 
 dev:
 	podman run --rm --expose 6000 --name $(CONTAINER_NAME) \
-	--pod pod -v $(PWD):/app:Z $(IMAGE_NAME) \
-	python manage.py runserver 0:6000
+	--pod pod-web -v $(PWD):/app:Z $(IMAGE_NAME) \
+	python manage.py runserver 0:6000 --insecure
 
 inspect:
 	podman inspect $(CONTAINER_NAME)

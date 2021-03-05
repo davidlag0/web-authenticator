@@ -20,6 +20,7 @@ django-redis = "*"
 redis = "*"
 dj-database-url = "*"
 django-cache-url = "*"
+elasticsearch = "==7.9.1"
 
 [requires]
 python_version = "3.8"

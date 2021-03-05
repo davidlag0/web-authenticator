@@ -1,3 +1,7 @@
-# from django.contrib import admin
+'''Admin configuration for webauth'''
+from django.contrib import admin
+from .models import User, Tool, UserAccess
 
-# Register your models here.
+admin.site.register(User)
+admin.site.register(Tool)
+admin.site.register(UserAccess)

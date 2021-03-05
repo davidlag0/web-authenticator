@@ -6,6 +6,7 @@ from pathlib import Path
 from decouple import config, Csv
 from dj_database_url import parse as db_url
 import django_cache_url
+from elasticsearch import Elasticsearch
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -24,6 +25,7 @@ ALLOWED_HOSTS = config('ALLOWED_HOSTS', '', cast=Csv())
 
 INSTALLED_APPS = [
     'webauth.apps.WebauthConfig',
+#    'django.contrib.sites',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -115,6 +117,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/3.1/howto/static-files/
 
 STATIC_URL = '/static/'
+MEDIA_URL = '/media/'
+STATIC_ROOT = BASE_DIR / 'static'
 
 # Ensures that the expiration time of the session is based on
 # when the last user query was.
@@ -147,3 +151,19 @@ LOGGING = {
         }
     }
 }
+
+ELASTICSEARCH = Elasticsearch(
+    [config('ELASTICSEARCH_URL')],
+    verify_certs=False
+)
+
+# LOGIN_URL = '/auth/accounts/login/'
+# SITE_ID = 1
+
+#USE_X_FORWARDED_HOST = True
+
+# This is required for the admin section to work because of how NGINX was setup.
+FORCE_SCRIPT_NAME = '/auth/'
+
+# When this is set, it prevents a session from working.
+# SESSION_COOKIE_PATH = '/auth/'
